@@ -28,6 +28,25 @@
       <div class="bg-white min-h-screen">
         <div class="py-10 px-20">
           <form action="view-order.html" method="post">
+            <input
+              type="hidden"
+              name="subtotal"
+              id="subtotal_input"
+              value="1000000"
+            />
+            <input
+              type="hidden"
+              name="discount"
+              id="discount_input"
+              value="0"
+            />
+            <input
+              type="hidden"
+              name="total"
+              id="total_input"
+              value="1000000"
+            />
+
             <div class="mb-7">
               <h1 class="text-xl font-bold mb-1 text-slate-800">Payment</h1>
               <p class="text-sm text-slate-700 mb-5">
@@ -110,6 +129,62 @@
                     class="text-xs text-slate-700 block w-full text-center py-2 px-3"
                     >Tambahkan Alamat</a
                   >
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-7">
+              <h1 class="text-xl font-bold mb-1 text-slate-800">Postage</h1>
+              <p class="text-sm text-slate-700 mb-5">
+                Enter your information to see postage
+              </p>
+
+              <div class="mb-3">
+                <label for="courier" class="text-slate-700 font-medium text-sm"
+                  >Courier</label
+                >
+                <div
+                  class="w-full border border-gray-300 rounded-lg overflow-hidden"
+                >
+                  <div class="flex gap-5 border-b-2 py-2 px-3">
+                    <input
+                      onchange="setOngkir(event)"
+                      type="radio"
+                      name="courier"
+                      id="courier_1"
+                      value="10000"
+                    />
+                    <label for="courier_1" class="w-full">
+                      <h6 class="text-md text-slate-700 font-semibold">JNE</h6>
+                      <p class="text-sm text-slate-600">Rp. 10.000</p>
+                    </label>
+                  </div>
+                  <div class="flex gap-5 border-b-2 py-2 px-3">
+                    <input
+                      onchange="setOngkir(event)"
+                      type="radio"
+                      name="courier"
+                      id="courier_2"
+                      value="5000"
+                    />
+                    <label for="courier_2" class="w-full">
+                      <h6 class="text-md text-slate-700 font-semibold">POS</h6>
+                      <p class="text-sm text-slate-600">Rp. 5.000</p>
+                    </label>
+                  </div>
+                  <div class="flex gap-5 border-b-2 py-2 px-3">
+                    <input
+                      onchange="setOngkir(event)"
+                      type="radio"
+                      name="courier"
+                      id="courier_3"
+                      value="2000"
+                    />
+                    <label for="courier_3" class="w-full">
+                      <h6 class="text-md text-slate-700 font-semibold">TIKI</h6>
+                      <p class="text-sm text-slate-600">Rp. 2.000</p>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>
@@ -343,19 +418,28 @@
             <table class="table-auto w-full">
               <tr>
                 <td class="text-xs text-slate-600 w-full">Subtotal</td>
-                <td class="text-xs text-slate-800 text-nowrap">
+                <td class="text-xs text-slate-800 text-right text-nowrap">
                   Rp. 10.000.000
                 </td>
               </tr>
               <tr>
+                <td class="text-xs text-slate-600">Postage</td>
+                <td class="text-xs text-slate-800 text-right text-nowrap">
+                  <div id="ongkir-cek">+</div>
+                </td>
+              </tr>
+              <tr>
                 <td class="text-xs text-slate-600">Discount</td>
-                <td class="text-xs text-slate-800 text-nowrap">
-                  -Rp. 1.000.000
+                <td class="text-xs text-slate-800 text-right text-nowrap">
+                  <div id="discount">-</div>
                 </td>
               </tr>
               <tr>
                 <td class="text-sm text-slate-600">Total</td>
-                <td class="text-sm text-slate-800 text-nowrap">Rp. 900.000</td>
+                <td class="text-sm text-slate-800 text-right text-nowrap flex">
+                  Rp.
+                  <div id="total">10.000.000</div>
+                </td>
               </tr>
             </table>
           </div>
@@ -379,6 +463,8 @@
       }
 
       async function checkVoucher() {
+        const discount_input = document.getElementById("discount_input");
+        const discount = document.getElementById("discount");
         const voucher = document.getElementById("vocher").value;
         let message = document.getElementById("voucher-status");
         message.innerHTML = `
@@ -391,16 +477,64 @@
             message.innerHTML = `
         <span class="text-xs text-green-500 font-medium">Voucher code is valid</span>
         `;
+            discount_input.value = data.discount;
+            discount.textContent = data.discount.toLocaleString("id-ID");
+            setTotal();
           } else {
             message.innerHTML = `
       <span class="text-xs text-green-500 font-medium">Voucher code is valid</span>
       `;
+            discount_input.value = 0;
+            discount.textContent = 0;
+            setTotal(clear);
           }
         } catch (error) {
           message.innerHTML = `
       <span class="text-xs text-red-500 font-medium">Error checking voucher</span>
       `;
+          discount_input.value = 0;
+          discount.textContent = 0;
+          setTotal(clear);
         }
+      }
+
+      function setOngkir(event) {
+        const amount = parseInt(event.target.value);
+        const ongkir = document.getElementById("ongkir-cek");
+        ongkir.innerHTML = `+ Rp. ${amount.toLocaleString("id-ID")}`;
+        setTotal();
+      }
+
+      function setTotal(clear) {
+        let totalAmount = 0;
+        if (clear) {
+          document.getElementById("ongkir-cek").innerHTML = totalAmount;
+        }
+
+        // subtotal
+        const subtotal_input = parseInt(
+          document.getElementById("subtotal_input").value
+        );
+        totalAmount += subtotal_input;
+
+        // ongkir
+        const courier = parseInt(
+          document.querySelector("input[name='courier']:checked").value
+        );
+        totalAmount += courier;
+
+        // discount
+        const discount_input = parseInt(
+          document.getElementById("discount_input").value
+        );
+        totalAmount -= discount_input;
+
+        // total
+        document.getElementById("total").innerHTML =
+          totalAmount.toLocaleString("id-ID");
+
+        // set total
+        document.getElementById("total_input").value = totalAmount;
       }
     </script>
   </body>
